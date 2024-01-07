@@ -44,7 +44,7 @@ var posBuffer;
 
 var theta = [0, 0, 0];
 
-var cameraPos = vec3(0, 4, 10);
+var cameraPos = vec3(0, 10, 30);
 var target = vec3(0, 0, 0);
 
 var moveCallback;
