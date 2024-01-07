@@ -52,6 +52,18 @@ var mouseX = 0;
 var mouseY = 0;
 var isMouse = false;
 
+const gridRows = 25;
+const gridColumns = 25;
+const cubeSpacing = 1.2; // Adjust as needed to ensure cubes do not touch
+
+
+function getCubePosition(row, column) {
+    const x = (row - gridRows / 2) * cubeSpacing;
+    const z = (column - gridColumns / 2) * cubeSpacing;
+    return [x, 0, z]; // Assuming y is up-axis and cubes are placed at y = 0
+}
+
+
 // Define vertices and texture coordinates for a cube
 verticesOfShape = [
     // Front face
@@ -258,7 +270,19 @@ var render = function () {
 
     // Modify the render function's drawing call
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
-    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+
+    for (let row = 0; row < gridRows; row++) {
+        for (let col = 0; col < gridColumns; col++) {
+            const cubePosition = getCubePosition(row, col);
+            modelViewMatrix = lookAt(cameraPos, target, vec3(0, 1, 0));
+            // Add translation for cubePosition
+            modelViewMatrix = mult(modelViewMatrix, translate(cubePosition));
+            // ... rotation or any other transformations ...
+
+            gl.uniformMatrix4fv(programInfo.uniformLocations.modelMatrixUniform, false, flatten(modelViewMatrix));
+            gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
+        }
+    }
 
 
     requestAnimFrame(render);
