@@ -55,91 +55,89 @@ var isMouse = false;
 // Define vertices and texture coordinates for a cube
 verticesOfShape = [
     // Front face
-    -0.5, -0.5,  0.5,
-    0.5, -0.5,  0.5,
-    0.5,  0.5,  0.5,
-    -0.5,  0.5,  0.5,
+    -0.5, -0.5, 0.5,
+    0.5, -0.5, 0.5,
+    0.5, 0.5, 0.5,
+    -0.5, 0.5, 0.5,
 
     // Back face
     -0.5, -0.5, -0.5,
     0.5, -0.5, -0.5,
-    0.5,  0.5, -0.5,
-    -0.5,  0.5, -0.5,
+    0.5, 0.5, -0.5,
+    -0.5, 0.5, -0.5,
 
     // Top face
-    -0.5,  0.5, -0.5,
-    -0.5,  0.5,  0.5,
-    0.5,  0.5,  0.5,
-    0.5,  0.5, -0.5,
+    -0.5, 0.5, -0.5,
+    -0.5, 0.5, 0.5,
+    0.5, 0.5, 0.5,
+    0.5, 0.5, -0.5,
 
     // Bottom face
     -0.5, -0.5, -0.5,
-    -0.5, -0.5,  0.5,
-    0.5, -0.5,  0.5,
+    -0.5, -0.5, 0.5,
+    0.5, -0.5, 0.5,
     0.5, -0.5, -0.5,
 
     // Right face
     0.5, -0.5, -0.5,
-    0.5,  0.5, -0.5,
-    0.5,  0.5,  0.5,
-    0.5, -0.5,  0.5,
+    0.5, 0.5, -0.5,
+    0.5, 0.5, 0.5,
+    0.5, -0.5, 0.5,
 
     // Left face
     -0.5, -0.5, -0.5,
-    -0.5,  0.5, -0.5,
-    -0.5,  0.5,  0.5,
-    -0.5, -0.5,  0.5,
+    -0.5, 0.5, -0.5,
+    -0.5, 0.5, 0.5,
+    -0.5, -0.5, 0.5,
 ];
 
 const indices = [
-    0, 1, 2,     0, 2, 3,    // Front face
-    4, 5, 6,     4, 6, 7,    // Back face
-    8, 9, 10,    8, 10, 11,  // Top face
-    12, 13, 14,  12, 14, 15, // Bottom face
-    16, 17, 18,  16, 18, 19, // Right face
-    20, 21, 22,  20, 22, 23  // Left face
+    0, 1, 2, 0, 2, 3,    // Front face
+    4, 5, 6, 4, 6, 7,    // Back face
+    8, 9, 10, 8, 10, 11,  // Top face
+    12, 13, 14, 12, 14, 15, // Bottom face
+    16, 17, 18, 16, 18, 19, // Right face
+    20, 21, 22, 20, 22, 23  // Left face
 ];
-
 
 
 const textureCoordinates = [
     // Front
-    0.0,  0.0,
-    1.0,  0.0,
-    1.0,  1.0,
-    0.0,  1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
 
     // Back
-    0.0,  0.0,
-    1.0,  0.0,
-    1.0,  1.0,
-    0.0,  1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
 
     // Top
-    0.0,  0.0,
-    1.0,  0.0,
-    1.0,  1.0,
-    0.0,  1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
 
     // Bottom
-    0.0,  0.0,
-    1.0,  0.0,
-    1.0,  1.0,
-    0.0,  1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
 
     // Right
-    0.0,  0.0,
-    1.0,  0.0,
-    1.0,  1.0,
-    0.0,  1.0,
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0,
 
     // Left
-    0.0,  0.0,
-    1.0,  0.0,
-    1.0,  1.0,
-    0.0,  1.0
+    0.0, 0.0,
+    1.0, 0.0,
+    1.0, 1.0,
+    0.0, 1.0
 ];
-
 
 
 function _createBufferObject(gl, array) {
@@ -233,7 +231,34 @@ var render = function () {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.uniform4f(uniformColorLoc, 0.50, 1.0, 0.50, 1);
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
+    gl.clearDepth(1.0);
+    gl.enable(gl.DEPTH_TEST);
+
+    type = gl.FLOAT;
+    normalizeIt = false;
+    stride = Float32Array.BYTES_PER_ELEMENT * 3;
+
+    // Create an element buffer object (indices)
+    const indexBuffer = gl.createBuffer();
+
+    posBuffer = _createBufferObject(gl, verticesOfShape);
+
+    uniformColorLoc = gl.getUniformLocation(program, "fragmentColor");
+
+    const aPosition = gl.getAttribLocation(program, "pos");
+
+    gl.enableVertexAttribArray(aPosition);
+    gl.vertexAttribPointer(aPosition, 3, type, normalizeIt, stride, 0);
+
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+
+    // Modify the render function's drawing call
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+    gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
 
 
     requestAnimFrame(render);
@@ -276,26 +301,8 @@ function init() {
         mouseY = movementY;
     }
 
-    type = gl.FLOAT;
-    normalizeIt = false;
-    stride = Float32Array.BYTES_PER_ELEMENT * 6;
 
     aspectRatio = canvas.width / canvas.height;
-
-    gl.viewport(0, 0, canvas.width, canvas.height);
-
-    gl.clearDepth(1.0);
-    gl.enable(gl.DEPTH_TEST);
-
-    posBuffer = _createBufferObject(gl, verticesOfShape);
-
-    uniformColorLoc = gl.getUniformLocation(program, "fragmentColor");
-
-    const aPosition = gl.getAttribLocation(program, "pos");
-    gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-    gl.enableVertexAttribArray(aPosition);
-    gl.vertexAttribPointer(aPosition, 3, type, normalizeIt, stride, 0);
-
 
     requestAnimationFrame(function () {
         render();
