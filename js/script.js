@@ -157,6 +157,40 @@ const textureCoordinates = [
     0.0, 1.0
 ];
 
+var skyboxVertices = [
+    // Positions
+    -1.0, -1.0,  1.0, // Back face
+    1.0, -1.0,  1.0,
+    -1.0,  1.0,  1.0,
+    1.0,  1.0,  1.0,
+
+    -1.0, -1.0, -1.0, // Front face
+    -1.0,  1.0, -1.0,
+    1.0, -1.0, -1.0,
+    1.0,  1.0, -1.0,
+
+    -1.0,  1.0, -1.0, // Top face
+    -1.0,  1.0,  1.0,
+    1.0,  1.0, -1.0,
+    1.0,  1.0,  1.0,
+
+    -1.0, -1.0, -1.0, // Bottom face
+    1.0, -1.0, -1.0,
+    -1.0, -1.0,  1.0,
+    1.0, -1.0,  1.0,
+
+    1.0, -1.0, -1.0, // Right face
+    1.0,  1.0, -1.0,
+    1.0, -1.0,  1.0,
+    1.0,  1.0,  1.0,
+
+    -1.0, -1.0, -1.0, // Left face
+    -1.0, -1.0,  1.0,
+    -1.0,  1.0, -1.0,
+    -1.0,  1.0,  1.0,
+];
+
+
 
 function _createBufferObject(gl, array) {
 
@@ -443,3 +477,52 @@ function loadTexture(gl, url) {
 
 // Load the texture
 const cubeTexture = loadTexture(gl, '../Assets/seagull.jpg');
+
+function loadCubeTexture(gl, urls) {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+
+    // Define each face of the cube and load the corresponding image
+    const faceInfos = [
+        { target: gl.TEXTURE_CUBE_MAP_POSITIVE_X, url: urls[0] }, // Right
+        { target: gl.TEXTURE_CUBE_MAP_NEGATIVE_X, url: urls[1] }, // Left
+        { target: gl.TEXTURE_CUBE_MAP_POSITIVE_Y, url: urls[2] }, // Top
+        { target: gl.TEXTURE_CUBE_MAP_NEGATIVE_Y, url: urls[3] }, // Bottom
+        { target: gl.TEXTURE_CUBE_MAP_POSITIVE_Z, url: urls[4] }, // Front
+        { target: gl.TEXTURE_CUBE_MAP_NEGATIVE_Z, url: urls[5] }, // Back
+    ];
+
+    faceInfos.forEach((faceInfo) => {
+        const { target, url } = faceInfo;
+
+        // Setup each face so it's immediately renderable
+        gl.texImage2D(target, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 255, 255]));
+
+        // Asynchronously load an image
+        const image = new Image();
+        image.onload = function() {
+            gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+            gl.texImage2D(target, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+            gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+        };
+        image.src = url;
+    });
+
+    // Set up texture parameters
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
+
+    return texture;
+}
+
+const skyboxTexture = loadCubeTexture(gl, [
+    '..Assets/skybox/right.jpg',    // Positive X
+    '..Assets/skybox/left.jpg',     // Negative X
+    '..Assets/skybox/top.jpg',      // Positive Y
+    '..Assets/skybox/bottom.jpg',   // Negative Y
+    '..Assets/skybox/front.jpg',    // Positive Z
+    '..Assets/skybox/back.jpg',     // Negative Z
+]);
