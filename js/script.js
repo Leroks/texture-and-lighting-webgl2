@@ -1,24 +1,30 @@
 const vsSource = `#version 300 es
     in vec4 pos;
+    in vec2 aTexCoord; // Add texture coordinate attribute
     uniform mat4 projectionMatrix;
     uniform mat4 mvMatrix;
     uniform vec4 vColor;
     out vec4 fragmentColor;
+    out vec2 vTexCoord; // Pass texture coordinate to fragment shader
     
     void main() 
     {
         gl_Position =  projectionMatrix  * mvMatrix * pos;
         fragmentColor = vColor;
+        vTexCoord = aTexCoord; // Pass texture coordinate to fragment shader
     }
 `;
 const fsSource = `#version 300 es
     precision mediump float;
-    uniform vec4 fragmentColor;
+    
+    in vec2 vTexCoord; // Receive texture coordinate from vertex shader
+    uniform sampler2D uTexture; // Texture sampler
+    
     out vec4 fragColor;
     
     void main() 
     {
-        fragColor = fragmentColor;
+        fragColor = texture(uTexture, vTexCoord); // Apply the texture
     }
 `;
 
@@ -258,12 +264,26 @@ var render = function () {
 
     posBuffer = _createBufferObject(gl, verticesOfShape);
 
+    // Create buffer for texture coordinates
+    const texCoordBuffer = _createBufferObject(gl, textureCoordinates);
+
     uniformColorLoc = gl.getUniformLocation(program, "fragmentColor");
 
     const aPosition = gl.getAttribLocation(program, "pos");
 
+    // Bind the texture
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, cubeTexture);
+    gl.uniform1i(gl.getUniformLocation(program, "uTexture"), 0); // Tell the shader we bound the texture to texture unit 0
+
     gl.enableVertexAttribArray(aPosition);
     gl.vertexAttribPointer(aPosition, 3, type, normalizeIt, stride, 0);
+
+    // Set up the texture coordinates attribute (similar to how you set up the position attribute)
+    const aTexCoordLocation = gl.getAttribLocation(program, "aTexCoord");
+    gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+    gl.vertexAttribPointer(aTexCoordLocation, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(aTexCoordLocation);
 
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
@@ -280,6 +300,18 @@ var render = function () {
             // ... rotation or any other transformations ...
 
             gl.uniformMatrix4fv(programInfo.uniformLocations.modelMatrixUniform, false, flatten(modelViewMatrix));
+
+            // Bind the position buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
+            gl.vertexAttribPointer(aPosition, 3, type, normalizeIt, stride, 0);
+            gl.enableVertexAttribArray(aPosition);
+
+            // Bind the texture coordinate buffer
+            gl.bindBuffer(gl.ARRAY_BUFFER, texCoordBuffer);
+            gl.vertexAttribPointer(aTexCoordLocation, 2, gl.FLOAT, false, 0, 0);
+            gl.enableVertexAttribArray(aTexCoordLocation);
+
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
             gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
         }
     }
@@ -378,3 +410,36 @@ document.onkeydown = function (e) {
             break;
     }
 }
+
+function loadTexture(gl, url) {
+    const texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+
+    // Fill the texture with a 1x1 blue pixel as placeholder
+    const level = 0;
+    const internalFormat = gl.RGBA;
+    const width = 1;
+    const height = 1;
+    const border = 0;
+    const srcFormat = gl.RGBA;
+    const srcType = gl.UNSIGNED_BYTE;
+    const pixel = new Uint8Array([0, 0, 255, 255]); // Blue pixel
+    gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, width, height, border, srcFormat, srcType, pixel);
+
+    // Load the actual image
+    const image = new Image();
+    image.onload = function () {
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, srcFormat, srcType, image);
+
+        // WebGL1 has different requirements for power of 2 images vs non power of 2 images
+        // For simplicity, assuming the image is power of 2 here
+        gl.generateMipmap(gl.TEXTURE_2D);
+    };
+    image.src = url;
+
+    return texture;
+}
+
+// Load the texture
+const cubeTexture = loadTexture(gl, '../Assets/seagull.jpg');
