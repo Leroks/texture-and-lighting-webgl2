@@ -519,10 +519,10 @@ function loadCubeTexture(gl, urls) {
 }
 
 const skyboxTexture = loadCubeTexture(gl, [
-    '..Assets/skybox/right.jpg',    // Positive X
-    '..Assets/skybox/left.jpg',     // Negative X
-    '..Assets/skybox/top.jpg',      // Positive Y
-    '..Assets/skybox/bottom.jpg',   // Negative Y
-    '..Assets/skybox/front.jpg',    // Positive Z
-    '..Assets/skybox/back.jpg',     // Negative Z
+    '../Assets/skybox/right.jpg',    // Positive X
+    '../Assets/skybox/left.jpg',     // Negative X
+    '../Assets/skybox/top.jpg',      // Positive Y
+    '../Assets/skybox/bottom.jpg',   // Negative Y
+    '../Assets/skybox/front.jpg',    // Positive Z
+    '../Assets/skybox/back.jpg',     // Negative Z
 ]);
